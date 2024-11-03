@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { UserRegistry, UserRegistryModel } from "../entities/UserRegistry";
-import { startMessageProcessor } from "./message.processor";
+// import { startMessageProcessor } from "./message.processor";
 import { isSocketConnected } from "../../max-web-api/api";
 
 export class UserRegistryManager {

@@ -40,18 +40,18 @@ interface UserPresence {
 }
 
 // Define interface for instance methods
-interface IDocumentMethods {
-  canUserEdit(userID: ObjectId): boolean;
-  addCollaborator(
-    userID: ObjectId,
-    permission: DocumentPermission,
-    addedBy: ObjectId
-  ): void;
-  updateVersion(content: any, updatedBy: ObjectId): void;
-}
+// interface IDocumentMethods {
+//   canUserEdit(userID: ObjectId): boolean;
+//   addCollaborator(
+//     userID: ObjectId,
+//     permission: DocumentPermission,
+//     addedBy: ObjectId
+//   ): void;
+//   updateVersion(content: any, updatedBy: ObjectId): void;
+// }
 
 // Define the main document interface extending both Document and IDocumentMethods
-export interface IDocument extends Document {
+export class Documents extends Document {
   documentID: string;
   name: string;
   data: {
@@ -81,16 +81,16 @@ export interface IDocument extends Document {
     maxVersions?: number;
   };
   // Include the methods
-  canUserEdit(userID: ObjectId): boolean;
-  addCollaborator(
-    userID: ObjectId,
-    permission: DocumentPermission,
-    addedBy: ObjectId
-  ): void;
-  updateVersion(content: any, updatedBy: ObjectId): void;
+  // canUserEdit(userID: ObjectId): boolean;
+  // addCollaborator(
+  //   userID: ObjectId,
+  //   permission: DocumentPermission,
+  //   addedBy: ObjectId
+  // ): void;
+  // updateVersion(content: any, updatedBy: ObjectId): void;
 }
 
-const DocumentsSchema = new Schema<IDocument>(
+const DocumentsSchema = new Schema<Documents>(
   {
     documentID: {
       type: String,
@@ -256,48 +256,7 @@ DocumentsSchema.index({ "metadata.lastModified": -1 });
 DocumentsSchema.index({ "collaborators.userID": 1 });
 DocumentsSchema.index({ createdAt: -1 });
 
-export const DocumentsModel = model<IDocument>(
+export const DocumentsModel = model<Documents>(
   ModelNames.DOCUMENTS,
   DocumentsSchema
 );
-
-// import { Document, Schema, model } from "mongoose";
-// import { ObjectId } from "mongodb";
-
-// import { ModelNames } from "./models.names";
-
-// export class Documents extends Document {
-//   documentID: string;
-//   name: string;
-//   data: { [key: string]: any };
-//   author: {
-//     userID: ObjectId;
-//     createdAt: Date;
-//   };
-//   cursor: {
-//     selection: any;
-//   };
-// }
-
-// const DocumentsSchema: Schema = new Schema<Documents>(
-//   {
-//     documentID: { type: String, required: true, unique: true },
-//     name: { type: String, required: true },
-//     data: { type: Object, required: true },
-//     author: {
-//       userID: {
-//         type: Schema.Types.ObjectId,
-//         ref: ModelNames.USER,
-//         required: true,
-//         index: true,
-//       },
-//       createdAt: { type: Date, required: true },
-//     },
-//   },
-//   { timestamps: true }
-// );
-
-// export const DocumentsModel = model<Documents>(
-//   ModelNames.DOCUMENTS,
-//   DocumentsSchema
-// );

@@ -2,9 +2,8 @@ import bcrypt from "bcrypt";
 
 import { issueToken } from "../plugins";
 import { LocalSignInDTO } from "../DTOs/signIn.DTO";
-import { UserMetaDataGeneral } from "../../typings/User.types";
 import { AccountStatus, AccountType } from "../../typings/Account.types";
-import { ModelNames, GeneralModel, UserModel } from "../../max-entities";
+import {  UserModel } from "../../max-entities";
 
 export const LocalSignInIndividualPipe = async (DTO: LocalSignInDTO) => {
   const { email, password } = DTO;
@@ -18,26 +17,7 @@ export const LocalSignInIndividualPipe = async (DTO: LocalSignInDTO) => {
     };
 
   const { _id, status, password: hashedPassword } = user;
-  const UserMetaData = (await GeneralModel.findOne({
-    collectionID: _id,
-    collectionName: ModelNames.USER,
-    "associatedData.type": "metaData",
-  })) as UserMetaDataGeneral;
-  // if (!UserMetaData)
-  //   return {
-  //     success: false,
-  //     message: `cannot authorize user`,
-  //     data: null,
-  //     hookData: null,
-  //   };
-  // if (!UserMetaData || !UserMetaData.associatedData.metaData.verifiedAt) {
-  //   return {
-  //     success: false,
-  //     message: "User not verified, kindly verify your account",
-  //     data: user,
-  //     hookData: user,
-  //   };
-  // }
+ 
 
   if (status == AccountStatus.SUSPENDED)
     return {

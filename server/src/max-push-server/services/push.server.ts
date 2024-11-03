@@ -8,7 +8,7 @@ import { AccountTokenType } from "../../typings/Account.types";
 import { DocumentsModel, UserModel } from "../../max-entities";
 import { GetAllDocumentsPipe } from "../../max-document/pipes";
 import { GetAllDocumentsDTO } from "../../max-document/DTOs/GetDocumentDTO";
-import { toObjectId } from "../../max-shared";
+
 
 type socketAuthType = {
   // serverPublicToken: string;
@@ -100,10 +100,6 @@ export class SocketHandler {
     const { userToken } = data as socketDataType;
     const { _id: __id } = userToken!;
     const userID = new Types.ObjectId(__id);
-
-    console.log("userID", userID);
-    console.log("socketID", socketID);
-    console.log("data", { data });
 
     socket.on(
       "get-all-documents",
@@ -288,7 +284,6 @@ export class SocketHandler {
             $push: {
               activeUsers: {
                 userID,
-                userName: userToken?.name,
                 color: getRandomColor(userID.toString()),
                 lastActive: new Date(),
               },
@@ -396,7 +391,6 @@ export class SocketHandler {
             const remainingUsers =
               updatedDoc?.activeUsers.map((user) => ({
                 userId: user.userID.toString(),
-                userName: user.userName,
                 color: user.color,
               })) || [];
 
@@ -439,7 +433,6 @@ export class SocketHandler {
               $push: {
                 activeUsers: {
                   userID: new Types.ObjectId(userId),
-                  userName,
                   color: userColor,
                   lastActive: new Date(),
                 },
@@ -454,7 +447,6 @@ export class SocketHandler {
           if (document) {
             const activeUsers = document.activeUsers.map((user) => ({
               userId: user.userID.toString(),
-              userName: user.userName,
               color: user.color,
             }));
 
@@ -583,7 +575,7 @@ export class SocketHandler {
           documentID: documentId,
         });
         if (document && document.settings.versioningEnabled) {
-          document.updateVersion(content, new Types.ObjectId(userID));
+          (document as any).updateVersion(content, new Types.ObjectId(userID));
           await document.save();
         }
       } catch (error) {
