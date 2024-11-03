@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./client
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_SERVER_URL=http://localhost:4500
+      - VITE_CORE_BACKEND_URL=http://localhost:4500/api/v1
+    depends_on:
+      - backend
+
+  backend:
+    build: ./server
+    ports:
+      - "4500:4500"
+    environment:
+      - MONGO_HOST=mongodb://mongodb:27017/editor
+      - NODE_ENV=development
+      - JWT_SECRET=secret
+      - JWT_EXPIRY=1d
+      - SALT_WORKER=12
+      - GENERAL_SERVER_TASK_DURATION=4
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
