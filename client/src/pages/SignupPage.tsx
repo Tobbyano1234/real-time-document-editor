@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
-import { signupUserReq } from '@/service/apiRequests';
-import { SignupFormValues } from '@/typings/auth.types';
-import { SignupSchema } from '@/validations/signup.validation';
+import { signupUserReq } from '../service/apiRequests';
+import { SignupFormValues } from '../typings/auth.types';
+import { SignupSchema } from '../validations/signup.validation';
 import toast from 'react-hot-toast';
 
 export const SignupPage = () => {
@@ -42,8 +42,8 @@ export const SignupPage = () => {
         }
     };
 
-    const ErrorText = ({ children }: { children: string }) => (
-        <p className="mt-1 text-sm text-red-600">{children}</p>
+    const ErrorText = (props: any) => (
+        <p className="mt-1 text-sm text-red-600">{props.children}</p>
     );
 
     return (

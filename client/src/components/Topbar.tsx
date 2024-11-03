@@ -1,11 +1,11 @@
 import Img1 from "../assets/Google-Docs-logo.png";
 import Img2 from "../assets/SearchIcon.jpeg";
 import { useState, useRef } from 'react';
-import { useAppDispatch } from '@/hooks/redux.hook';
-import { clearUser } from "@/store/slices/userSlice";
+import { useAppDispatch } from '../hooks/redux.hook';
+import { clearUser } from "../store/slices/userSlice";
 import { useNavigate } from "react-router-dom";
-import { useOutsideClick } from '@/hooks/useClickOutside.hook';
-import { UserDetails } from "@/typings/auth.types";
+import { useOutsideClick } from '../hooks/useClickOutside.hook';
+import { UserDetails } from "../typings/auth.types";
 
 export const Topbar = ({user}: {user: UserDetails}) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);

@@ -1,4 +1,4 @@
-import { InitialState } from '@/typings/auth.types';
+import { InitialState } from '../../typings/auth.types';
 import { createSlice } from '@reduxjs/toolkit'
 import { REHYDRATE } from 'redux-persist'
 

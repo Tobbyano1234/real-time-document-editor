@@ -1,5 +1,4 @@
 import { Joi } from "celebrate";
-import { toObjectId } from "../../../max-shared/validateToObjectID";
 
 export default {
   signupUser: {

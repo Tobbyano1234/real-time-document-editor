@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '../store';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { loginReq } from '@/service/apiRequests';
 import toast from 'react-hot-toast';
-import { setAuthToken, setUser } from '@/store/slices/userSlice';
+import type { AppDispatch } from '../store';
+import { loginReq } from '../service/apiRequests';
+import { setAuthToken, setUser } from '../store/slices/userSlice';
 import { isAxiosError } from 'axios';
-import { CustomError } from '@/typings/errormessage';
+import { CustomError } from '../typings/errormessage';
 
 export const LoginPage = () => {
     const [email, setEmail] = useState('');

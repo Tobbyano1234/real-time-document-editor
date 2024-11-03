@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Docs } from "./Docs";
-// import { io } from "socket.io-client";
 import { Topbar } from "./Topbar";
 import { Dialogbox } from "./Dialogbox";
-import { useAppSelector } from "@/hooks/redux.hook";
+import { useAppSelector } from "../hooks/redux.hook";
 import { Navigate } from "react-router-dom";
-import SocketService from "@/services/socket";
+import SocketService from "../services/socket";
 
 
 interface DocumentType {

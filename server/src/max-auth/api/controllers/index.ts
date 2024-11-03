@@ -7,14 +7,11 @@ import { signInModule, signUpModule } from "../../modules";
 import {
   LocalSignUpUserSuccessHook,
   LocalSignInUserSuccessHook,
-  LocalSignInUserFailureHook,
 } from "../../hooks";
 import { LocalSignUpUserDTO } from "../../DTOs";
-import { toObjectId } from "../../../max-shared/validateToObjectID";
-import { AuthenticatedRequest } from "../../../typings/express";
 
 export class AuthController {
-   static signUpUser = BaseController(async (request: Request) => {
+  static signUpUser = BaseController(async (request: Request) => {
     const LocalSignUpDTO = request.body as LocalSignUpUserDTO;
     const { success, message, data } = (await signUpModule({
       DTO: ["local", "user", LocalSignUpDTO],
@@ -32,7 +29,6 @@ export class AuthController {
     const { success, message, data, token } = (await signInModule({
       DTO: ["local", "user", LocalSignInDTO],
       onSuccess: LocalSignInUserSuccessHook,
-      onFailure: LocalSignInUserFailureHook,
     }))!;
     return {
       status: success ? httpStatus.OK : httpStatus.PRECONDITION_REQUIRED,

@@ -1,5 +1,4 @@
 import { Types } from "mongoose";
-import { match } from "ts-pattern";
 
 import { issueOtp } from "../plugins";
 import { UserMetaDataGeneral } from "../../typings/User.types";
@@ -8,7 +7,7 @@ import { AccountSignType, AccountStatus } from "../../typings/Account.types";
 import { GeneralModel, ModelNames, UserModel, User } from "../../max-entities";
 
 
-export const LocalSignUpUserSuccessHook = (user: Users) =>
+export const LocalSignUpUserSuccessHook = (user: User) =>
   process.nextTick(async () => {
     const { email } = user;
     const otpData = await issueOtp(email);
@@ -31,7 +30,7 @@ export const LocalSignUpUserSuccessHook = (user: Users) =>
     });
   });
 
-export const LocalSignInUserSuccessHook = (user: Users) =>
+export const LocalSignInUserSuccessHook = (user: User) =>
   process.nextTick(async () => {
     const { _id } = user;
     const UserMetaData = (await GeneralModel.findOne({

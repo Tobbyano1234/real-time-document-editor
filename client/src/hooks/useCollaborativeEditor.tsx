@@ -6,8 +6,8 @@ import { Socket, io } from 'socket.io-client';
 import { Awareness } from 'y-protocols/awareness';
 import QuillCursors from 'quill-cursors';
 import { TOOLBAR_OPTIONS } from '../constants';
-import  quill, { Delta } from 'quill/core';
-import { SocketIOProvider } from '@/provider/SocketIOProvider';
+import { Delta } from 'quill/core';
+import { SocketIOProvider } from '../provider/SocketIOProvider';
 
 
 // Register the cursors module
@@ -67,11 +67,8 @@ export const useCollaborativeEditor = ({
   }>>([]);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
- // Change this if it's not already using Quill type
 
-  // Initialize socket connection
   useEffect(() => {
-    // Create socket instance with auth
     const socket = io(SOCKET_URL, {
       ...SOCKET_OPTIONS,
       auth: { token }
@@ -140,8 +137,6 @@ export const useCollaborativeEditor = ({
     element.append(editor);
 
     try {
-      // const editorInstance = (editorContainer) => {
-
       const quillInstance = new Quill(editor, {
         theme: 'snow',
         modules: {
@@ -163,7 +158,6 @@ export const useCollaborativeEditor = ({
       const ydoc = new Y.Doc();
       const ytext = ydoc.getText('quill');
       const awareness = new Awareness(ydoc);
-      // Initialize SocketIO provider
       const provider = new SocketIOProvider(editorState.current.socket, ydoc);
 
       // Set awareness state
@@ -175,40 +169,16 @@ export const useCollaborativeEditor = ({
         },
         cursor: null
       });
-      // const binding = new QuillBinding(ytext, quillInstance);
       const binding = new QuillBinding(ytext, quillInstance, provider.awareness);
-
-
-      // // Set up awareness state
-      // provider.awareness.setLocalState({
-      //   user: {
-      //     id: user._id,
-      //     name: user.name,
-      //     color: `hsl(${Math.abs(user._id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 360}, 70%, 45%)`
-      //   },
-      //   cursor: null
-      // });
 
       // Initialize UndoManager
       const undoManager = new Y.UndoManager(ytext, {
         trackedOrigins: new Set([binding, 'keyboard'])
       });
 
-      // Add keyboard bindings for undo/redo
-      // quillInstance.keyboard.addBinding({ key: 'Z', shortKey: true }, {
-      //   handler: function () {
-      //     undoManager.undo();
-      //     socket.emit('undo-action', {
-      //       documentId,
-      //       userId: user._id
-      //     });
-      //     return false;
-      //   }
-      // });
-
       quillInstance.keyboard.addBinding({ key: 'Z', shortKey: true }, {
         handler: function () {
-          const currentState = editorState.current.ydoc?.store.getState();
+          const currentState = Y.encodeStateVector(editorState.current.ydoc!);
           undoManager.undo();
 
           socket.emit('undo-action', {
@@ -220,20 +190,9 @@ export const useCollaborativeEditor = ({
         }
       });
 
-      // quillInstance.keyboard.addBinding({ key: 'Z', shortKey: true, shiftKey: true }, {
-      //   handler: function () {
-      //     undoManager.redo();
-      //     socket.emit('redo-action', {
-      //       documentId,
-      //       userId: user._id
-      //     });
-      //     return false;
-      //   }
-      // });
-
       quillInstance.keyboard.addBinding({ key: 'Z', shortKey: true, shiftKey: true }, {
         handler: function () {
-          const currentState = editorState.current.ydoc?.store.getState();
+          const currentState = Y.encodeStateVector(editorState.current.ydoc!);
           undoManager.redo();
 
           socket.emit('redo-action', {
@@ -247,15 +206,10 @@ export const useCollaborativeEditor = ({
 
       editorState.current.quill = quillInstance;
 
-
       const cursors = quillInstance.getModule('cursors') as any;
-      console.log("cursors",cursors)
 
       const userColor = getRandomColor(user._id);
-      console.log("userColor>>>>>>>>>",userColor)
       editorState.current.cursors = cursors;
-      // const awareness = new Awareness(ydoc);
-
       
       const socket = editorState.current.socket!;
 
@@ -266,9 +220,6 @@ export const useCollaborativeEditor = ({
         provider
       };
       
-
-     
-
       quillInstance.on('selection-change', (range) => {
         console.log("selection change", range)
         if (range) {
@@ -279,32 +230,22 @@ export const useCollaborativeEditor = ({
             userName: user.name,
             range,
             color: getRandomColor(user._id)
-          }, (doc) => {
-            console.log("doc >>>>>>>>", doc)
           });
         }
       });
 
       // Handle awareness changes for cursors
       provider.awareness.on('change', () => {
-        console.log("am called awareness")
-        // const cursors = quillInstance.getModule('cursors') as QuillCursors;
         const states = Array.from(provider.awareness.getStates().entries());
-console.log("states>>>>>>>>>",states)
         states.forEach(([_clientId, state]) => {
-          console.log("state in loop>>>>>>>>",state)
           if (state?.user && state.user.id !== user._id) {
-            console.log("state user",state.user)
-            console.log("state user id",state.user.id)
             try {
-           const newCursor =  cursors.createCursor(
+           cursors.createCursor(
                 state.user.id,
                 state.user.name,
                 state.user.color
               );
-              console.log("newCursor>>>>>>>>>",newCursor)
               if (state.cursor) {
-              console.log("state.cursor>>>>", state.cursor)
                 cursors.moveCursor(state.user.id, state.cursor);
               }
             } catch (e) {
@@ -313,27 +254,6 @@ console.log("states>>>>>>>>>",states)
           }
         });
       });
-
-      // // Handle awareness changes
-      // awareness.on('change', () => {
-      //   const states = Array.from(awareness.getStates().entries());
-      //   states.forEach(([clientId, state]) => {
-      //     if (state?.user && state.user.id !== user._id) {
-      //       try {
-      //         cursors.createCursor(
-      //           state.user.id,
-      //           state.user.name,
-      //           state.user.color
-      //         );
-      //         if (state.cursor) {
-      //           cursors.moveCursor(state.user.id, state.cursor);
-      //         }
-      //       } catch (e) {
-      //         console.warn('Error updating cursor:', e);
-      //       }
-      //     }
-      //   });
-      // });
 
       // Document loading handler
       const handleLoadDocument = (document: any) => {
@@ -379,7 +299,7 @@ console.log("states>>>>>>>>>",states)
       };
 
       // Text change handler
-      quillInstance.on('text-change', (delta, oldDelta, source) => {
+      quillInstance.on('text-change', (delta, _oldDelta, source) => {
         if (source === 'user') {
           // Emit changes to other users
           socket.emit('doc-update', {
@@ -394,7 +314,6 @@ console.log("states>>>>>>>>>",states)
           console.log(quillInstance.getContents())
           saveTimeoutRef.current = setTimeout(() => {
             const fullDelta = quillInstance.getContents();
-            console.log('Saving full delta:', fullDelta); // Debug log
             socket.emit('save-document', {
               documentId,
               content: {
@@ -412,7 +331,6 @@ console.log("states>>>>>>>>>",states)
           }, 2000);
         }
       });
-      console.log(user)
       // Join document with user info
       socket.emit('join-document', {
         documentId,
@@ -424,7 +342,6 @@ console.log("states>>>>>>>>>",states)
       // Handle active users update
       socket.on('active-users', (users) => {
         // Filter out current user and transform data if needed
-        console.log('Active users:', users);
         setActiveUsers(
           users
             .filter((u: { userId: { toString: () => string; }; }) => u.userId.toString() !== user._id)
@@ -440,20 +357,6 @@ console.log("states>>>>>>>>>",states)
       socket.on('user-left', (userId) => {
         setActiveUsers(prev => prev.filter(u => u.userId !== userId));
       });
-
-      // // In initializeEditor function, after socket initialization
-      // socket.on('remote-undo', ({ userId, versionNumber }) => {
-      //   if (userId !== user._id) {
-      //     editorState.current.undoManager?.undo();
-      //   }
-      // });
-
-      // socket.on('remote-redo', ({ userId, content }) => {
-      //   if (userId !== user._id) {
-      //     editorState.current.undoManager?.redo();
-      //   }
-      // });
-
 
       // Add these socket listeners
       socket.on('remote-undo', ({ userId, state }) => {
@@ -476,36 +379,21 @@ console.log("states>>>>>>>>>",states)
         }
       });
 
-      // Handle cursor updates
       // const handleCursorUpdate = ({ userId, userName, range, color }) => {
       //   if (userId !== user._id) {
       //     try {
-      //       const cursors = quillInstance.getModule('cursors');
+      //       const cursors = quillInstance.getModule('cursors') as any;
 
-      //       // Remove existing cursor if it exists
-      //       try {
-      //         (cursors as any).removeCursor(userId);
-      //       } catch (e) {
-      //         // Ignore if cursor doesn't exist
+      //       // Create cursor if it doesn't exist
+      //       if (!cursors.cursors[userId]) {
+      //         cursors.createCursor(userId, userName, color);
       //       }
 
-      //       // Create new cursor
-      //       (cursors as any).createCursor(userId, userName, color);
-      //       (cursors as any).moveCursor(userId, range);
-
-      //       // Update cursor flag style
-      //       const cursorElement = document.querySelector(`[data-user-id="${userId}"]`);
-      //       if (cursorElement) {
-      //         const flag = cursorElement.querySelector('.ql-cursor-flag');
-      //         if (flag) {
-      //           flag.textContent = userName;
-      //           (flag as HTMLElement).style.backgroundColor = color;
-      //         }
-
-      //         const caret = cursorElement.querySelector('.ql-cursor-caret');
-      //         if (caret) {
-      //           (caret as HTMLElement).style.backgroundColor = color;
-      //         }
+      //       // Update cursor position
+      //       if (range) {
+      //         cursors.moveCursor(userId, range);
+      //       } else {
+      //         cursors.removeCursor(userId);
       //       }
       //     } catch (error) {
       //       console.error('Error updating cursor:', error);
@@ -513,69 +401,11 @@ console.log("states>>>>>>>>>",states)
       //   }
       // };
 
-      // In useCollaborativeEditor.ts
-      const handleCursorUpdate = ({ userId, userName, range, color }) => {
-        if (userId !== user._id) {
-          try {
-            const cursors = quillInstance.getModule('cursors') as any;
-
-            // Create cursor if it doesn't exist
-            if (!cursors.cursors[userId]) {
-              cursors.createCursor(userId, userName, color);
-            }
-
-            // Update cursor position
-            if (range) {
-              cursors.moveCursor(userId, range);
-            } else {
-              cursors.removeCursor(userId);
-            }
-          } catch (error) {
-            console.error('Error updating cursor:', error);
-          }
-        }
-      };
-
-
-      // const handleCursorUpdate = ({ userId, userName, range, color }) => {
-      //   if (userId !== user._id) {
-      //     try {
-      //       const cursors = quillInstance.getModule('cursors');
-
-      //       // Create or update cursor
-      //       (cursors as any).createCursor(userId, userName, color);
-      //       (cursors as any).moveCursor(userId, range);
-
-      //       // Update cursor styles
-      //       const cursorElement = document.querySelector(`[data-user-id="${userId}"]`);
-      //       if (cursorElement) {
-      //         const flag = cursorElement.querySelector('.ql-cursor-flag');
-      //         const caret = cursorElement.querySelector('.ql-cursor-caret');
-
-      //         if (flag) {
-      //           (flag as HTMLElement).style.backgroundColor = color;
-      //           const nameElement = flag.querySelector('.ql-cursor-name');
-      //           if (nameElement) {
-      //             nameElement.textContent = userName;
-      //           }
-      //         }
-
-      //         if (caret) {
-      //           (caret as HTMLElement).style.backgroundColor = color;
-      //         }
-      //       }
-      //     } catch (error) {
-      //       console.error('Error updating cursor:', error);
-      //     }
-      //   }
-      // };
 
       // Handle remote changes
       socket.on('receive-changes', (delta: any) => {
         quillInstance.updateContents(delta);
       });
-
-
 
       // Selection change handler
       quillInstance.on('selection-change', (range) => {
@@ -590,9 +420,6 @@ console.log("states>>>>>>>>>",states)
         }
       });
 
-
-
-      // Request initial document content
       socket.emit('get-document', { documentId }, (document: any) => {
         console.log('Document received:', document);
         if (document) {
@@ -602,19 +429,14 @@ console.log("states>>>>>>>>>",states)
 
       // Store references
       editorState.current = {
-        // quill,
-        // socket,
-        // ydoc,
-        // binding,
-        // awareness
-
         quill: quillInstance,
         socket: editorState.current.socket,
         ydoc,
         binding,
         awareness,
         undoManager: new Y.UndoManager(ytext),
-        cursors
+        cursors,
+        provider
       };
       console.log("last cursor instance>>>>>>>", cursors)
 
@@ -664,7 +486,6 @@ console.log("states>>>>>>>>>",states)
       socket.on('cursor-update', ({ userId, userName, range, color }) => {
         if (userId !== user._id) {
           try {
-            // const cursors = quillInstance.getModule('cursors') as any;
 
             // Create or update cursor
             if (!cursors.cursors[userId]) {
@@ -839,13 +660,10 @@ console.log("states>>>>>>>>>",states)
 
 
 const getRandomColor = (userId: string) => {
-  // Generate a consistent color based on user ID
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
   const hue = hash % 360;
-  return `hsl(${hue}, 70%, 45%)`; // Using HSL for better visibility
+  return `hsl(${hue}, 70%, 45%)`;
 };
-
-// In useCollaborativeEditor.tsx, modify the cleanup section
