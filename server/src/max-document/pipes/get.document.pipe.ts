@@ -31,8 +31,11 @@ export const GetSingleDocumentPipe = async (
 export const GetAllDocumentsPipe = async (
   GetAllDocumentsDTO: GetAllDocumentsDTO
 ) => {
-  const { userID } = GetAllDocumentsDTO;
-  const aggregationPipeline = [{ $match: { userID } }];
+  const { userID, search } = GetAllDocumentsDTO;
+  const aggregationPipeline: PipelineStage[] = [{ $match: { "author.userID": userID } }];
+  if (search) {
+    aggregationPipeline.push({ $match: { name: { $regex: search, $options: "i" } } });
+  }
   const documents = await DocumentsModel.aggregate(
     aggregationPipeline as unknown as PipelineStage[]
   );

@@ -7,7 +7,7 @@ import { Awareness } from 'y-protocols/awareness';
 import QuillCursors from 'quill-cursors';
 import { TOOLBAR_OPTIONS } from '../constants';
 import { Delta } from 'quill/core';
-import { SocketIOProvider } from '../provider/SocketIOProvider';
+import { SocketIOProvider } from '../providers/SocketIOProvider';
 
 
 // Register the cursors module
@@ -58,7 +58,7 @@ export const useCollaborativeEditor = ({
     awareness: null,
     undoManager: null,
     cursors: null,
-    provider:null
+    provider: null
   });
   const [activeUsers, setActiveUsers] = useState<Array<{
     userId: string;
@@ -88,6 +88,11 @@ export const useCollaborativeEditor = ({
 
     const handleConnectError = (error: Error) => {
       console.error('Socket connection error:', error);
+      // Check if error has statusCode property
+      if (error.message === 'Socket data error: userToken required') {
+        window.location.href = '/login';
+        return;
+      }
       setConnectionStatus('disconnected');
     };
 
@@ -150,7 +155,7 @@ export const useCollaborativeEditor = ({
           },
           history: {
             userOnly: true
-           }
+          }
         }
       });
 
@@ -210,7 +215,7 @@ export const useCollaborativeEditor = ({
 
       const userColor = getRandomColor(user._id);
       editorState.current.cursors = cursors;
-      
+
       const socket = editorState.current.socket!;
 
       // Store undoManager in state
@@ -219,7 +224,7 @@ export const useCollaborativeEditor = ({
         undoManager,
         provider
       };
-      
+
       quillInstance.on('selection-change', (range) => {
         console.log("selection change", range)
         if (range) {
@@ -240,7 +245,7 @@ export const useCollaborativeEditor = ({
         states.forEach(([_clientId, state]) => {
           if (state?.user && state.user.id !== user._id) {
             try {
-           cursors.createCursor(
+              cursors.createCursor(
                 state.user.id,
                 state.user.name,
                 state.user.color
@@ -508,7 +513,7 @@ export const useCollaborativeEditor = ({
       // });
       // socket.on('cursor-update', handleCursorUpdate);
 
-     
+
 
       // Cleanup function
       // return () => {
@@ -526,7 +531,7 @@ export const useCollaborativeEditor = ({
       //   socket.off('user-left');
       //   element.innerHTML = '';
       // };
-      return ()=> cleanup(element);
+      return () => cleanup(element);
     } catch (error) {
       console.error('Error initializing editor:', error);
       element.innerHTML = 'Error initializing editor. Please refresh the page.';
@@ -592,7 +597,7 @@ export const useCollaborativeEditor = ({
       console.warn('Cleanup error:', error);
     }
   };
-  
+
 
   useEffect(() => {
     return () => {

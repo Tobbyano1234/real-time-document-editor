@@ -6,8 +6,14 @@ import { clearUser } from "../store/slices/userSlice";
 import { useNavigate } from "react-router-dom";
 import { useOutsideClick } from '../hooks/useClickOutside.hook';
 import { UserDetails } from "../typings/auth.types";
+import { useDebounce } from '../hooks/useDebounce.hook';
 
-export const Topbar = ({user}: {user: UserDetails}) => {
+interface TopbarProps {
+    user: UserDetails;
+    onSearch: (query: string) => void;
+}
+
+export const Topbar = ({ user, onSearch }: TopbarProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -20,6 +26,18 @@ export const Topbar = ({user}: {user: UserDetails}) => {
         navigate('/login');
     };
 
+    const [searchValue, setSearchValue] = useState('');
+
+    const debouncedSearch = useDebounce((value: string) => {
+        onSearch(value);
+    }, 500);
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchValue(value);
+        debouncedSearch(value);
+    };
+
     return (
         <nav className="Topbar">
             <div className="logodiv">
@@ -28,7 +46,12 @@ export const Topbar = ({user}: {user: UserDetails}) => {
             </div>
             <div className="Searchbar">
                 <img src={Img2} alt="" />
-                <input type="text" placeholder="Search" />
+                <input 
+                    type="text" 
+                    placeholder="Search" 
+                    value={searchValue}
+                    onChange={handleSearchChange} 
+                />
             </div>
             <div className="profile-div" ref={dropdownRef}>
                 <button

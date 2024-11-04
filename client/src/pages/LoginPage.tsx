@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { AppDispatch } from '../store';
-import { loginReq } from '../service/apiRequests';
+import { loginReq } from '../services/apiRequests';
 import { setAuthToken, setUser } from '../store/slices/userSlice';
 import { isAxiosError } from 'axios';
 import { CustomError } from '../typings/errormessage';

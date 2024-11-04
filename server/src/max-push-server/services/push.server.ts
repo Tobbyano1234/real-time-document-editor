@@ -1,28 +1,23 @@
 import { Types } from "mongoose";
-import { ObjectId } from "mongodb";
 import { Socket } from "socket.io";
-// import { config } from "../../max-web-api/config";
 import { verifyToken } from "../../max-auth/plugins";
 import { UserRegistryManager } from "./user.registry";
 import { AccountTokenType } from "../../typings/Account.types";
 import { DocumentsModel, UserModel } from "../../max-entities";
 import { GetAllDocumentsPipe } from "../../max-document/pipes";
 import { GetAllDocumentsDTO } from "../../max-document/DTOs/GetDocumentDTO";
+import { getRandomColor } from "../../max-shared";
 
 
 type socketAuthType = {
-  // serverPublicToken: string;
   token?: string;
-  userID?: ObjectId; // we don't need this
 };
 
 type socketDataType = {
-  userID?: ObjectId; // not taking it
   userToken?: AccountTokenType;
 };
 
 export class SocketHandler {
-  // 2 assumptions
 
   static async authTokenMiddleware(
     socket: Socket,
@@ -32,30 +27,15 @@ export class SocketHandler {
       const { token: registeredUserToken } = socket.handshake
         .auth as socketAuthType;
 
-      // const { token: registeredUserToken } = socket.handshake.auth as socketAuthType || socket.handshake.headers as unknown as Partial<socketAuthType>;
-      // const serverPublicToken = socket.handshake.headers.serverpublictoken as string;
-      // const registeredUserToken = socket.handshake.headers.token as string;
-
-      // console.log("serverPublicToken", serverPublicToken);
-      // if (!serverPublicToken) {
-      //   next(new Error("Socket Auth Error: no public token found"));
-      //   throw new Error("Socket Auth Error: no public token found");
-      // }
-
-      // all the gues
-      // console.log(config.credentials.token.serverPublicToken);
-      // if (serverPublicToken !== config.credentials.token.serverPublicToken) {
-      //   next(new Error(`Socket Auth error: wrong public token`));
-      //   throw new Error(`Socket Auth error: wrong public token`);
-      // }
-
       if (registeredUserToken) {
-        // trycatch
         try {
           const decoded = (await verifyToken(
             registeredUserToken
           )) as AccountTokenType;
-          console.log("decoded", { decoded });
+          if (!decoded) {
+            next(new Error(`Socket Auth error: invalid token`));
+            throw new Error(`Socket Auth error: invalid token`);
+          }
           socket.data.userToken = decoded;
         } catch (error) {
           console.log(error);
@@ -107,8 +87,9 @@ export class SocketHandler {
         const filter: GetAllDocumentsDTO = { userID, page, limit };
         if (search) filter.search = search;
         const allDocuments = await GetAllDocumentsPipe(filter);
+        console.log("allDocuments", { allDocuments });
         allDocuments.data.reverse(); // To get most recent docs first.
-        socket.emit("all-documents", allDocuments);
+        socket.emit("all-documents", allDocuments.data);
       }
     );
 
@@ -332,8 +313,6 @@ export class SocketHandler {
             activeUsers: [
               {
                 userID,
-                userName: "Tobby",
-                // userName: userToken.name,
                 color: getRandomColor(userID.toString()),
                 lastActive: new Date(),
               },
@@ -782,12 +761,3 @@ function parseSocketMessage(msg: string) {
 }
 
 
-// Helper function for generating consistent colors
-function getRandomColor(userId: string): string {
-  let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = hash % 360;
-  return `hsl(${hue}, 70%, 45%)`;
-}
